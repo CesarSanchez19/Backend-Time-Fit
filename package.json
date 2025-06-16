@@ -1,0 +1,19 @@
+{
+  "name": "backend-time-fit",
+  "version": "1.0.0",
+  "description": "Base de datos para el proyecto time fit",
+  "license": "ISC",
+  "author": "Cesar Sanchez",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node --watch app/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "sequelize": "^6.37.7"
+  }
+}

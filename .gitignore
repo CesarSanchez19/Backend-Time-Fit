@@ -1,0 +1,6 @@
+# .gitignore
+# environment variables
+.env
+
+# common Node.js exclusions
+node_modules/
