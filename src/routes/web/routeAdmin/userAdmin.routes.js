@@ -2,7 +2,7 @@ import express from "express"; // Importa el módulo 'express' para crear el ser
 
 
 // Clase que define las rutas para la gestión de usuarios
-export class UserAdminRoutes {
+export class userAdminRoutes {
   // Método para inicializar las rutas de usuario
   iniUserRouter(app = express.application) {
     // Ruta GET que responde con un saludo
