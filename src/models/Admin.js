@@ -1,0 +1,31 @@
+import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
+
+const { Schema, model } = mongoose;
+
+const adminSchema = new Schema({
+  username: String,
+  name: String,
+  last_name: String,
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  admin_code: String,
+  rol_id: { type: Schema.Types.ObjectId, ref: 'Role' },
+  gym_id: { type: Schema.Types.ObjectId, ref: 'Gym' },
+  created_at: { type: Date, default: Date.now },
+  updated_at: { type: Date, default: Date.now }
+}, { collection: 'administrators' });
+
+adminSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+
+  try {
+    const hashed = await bcrypt.hash(this.password, 10);
+    this.password = hashed;
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+export default model('Admin', adminSchema);

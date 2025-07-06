@@ -1,12 +1,21 @@
-import express from 'express'
-import morgan  from 'morgan';
-import dotenv from 'dotenv/config'
+import express from 'express';
+import morgan from 'morgan';
+import cors from 'cors';
+import dotenv from 'dotenv/config';
 import connectDB from './connection/db.js';
+import adminRoutes from './routes/admin.routes.js';
+import gymRoutes from './routes/gym.routes.js';
+import privateRoutes from './routes/private.routes.js';
 
 connectDB();
 const app = express();
 
+app.use(cors({ origin: 'http://localhost:5173' })); // <--- HABILITAR CORS
 app.use(morgan('dev'));
+app.use(express.json());
+
+app.use('/api/admins', adminRoutes);
+app.use('/api/private', privateRoutes);
+app.use('/api/gyms', gymRoutes);
 
 export default app;
-
