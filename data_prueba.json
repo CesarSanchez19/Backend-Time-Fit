@@ -1,0 +1,162 @@
+[
+  {
+    "full_name": {
+      "name": "Enrique",
+      "last_father": "Castillo",
+      "last_mother": "Rodriguez"
+    },
+    "birth_date": "2005-03-23",
+    "email": "kike22313@example.com",
+    "phone": "9841676733",
+    "rfc": "COGH980313XXX",
+    "emergency_contact": {
+      "name": "Aaron Santos",
+      "phone": "9854873872"
+    },
+    "membership_id": {
+      "$ref": "memberships",
+      "$id": { "$oid": "686f3a64b81f7e28fec8f71f" }
+    },
+    "start_date": "2024-11-04",
+    "status": "Activo",
+    "payment": {
+      "method": "efectivo",
+      "amount": 500,
+      "currency": "MXN"
+    },
+    "colaborator_id": {
+      "$ref": "colaborators",
+      "$id": { "$oid": "686bce4efbfae3e91b3dfe0b" }
+    },
+    "created_at": "2024-11-04T15:30:00Z",
+    "updated_at": "2024-11-04T15:30:00Z"
+  },
+  {
+    "full_name": {
+      "name": "Ana",
+      "last_father": "López",
+      "last_mother": "Martínez"
+    },
+    "birth_date": "1998-07-12",
+    "email": "ana.lopez@example.com",
+    "phone": "9841245678",
+    "rfc": "LOMA980712XXX",
+    "emergency_contact": {
+      "name": "Carlos López",
+      "phone": "9841234567"
+    },
+    "membership_id": {
+      "$ref": "memberships",
+      "$id": { "$oid": "686f3a64b81f7e28fec8f720" }
+    },
+    "start_date": "2024-10-15",
+    "status": "Activo",
+    "payment": {
+      "method": "tarjeta",
+      "amount": 1350,
+      "currency": "MXN"
+    },
+    "colaborator_id": {
+      "$ref": "colaborators",
+      "$id": { "$oid": "686bce4efbfae3e91b3dfe0b" }
+    },
+    "created_at": "2024-10-15T09:45:00Z",
+    "updated_at": "2024-10-15T09:45:00Z"
+  },
+  {
+    "full_name": {
+      "name": "Luis",
+      "last_father": "Hernández",
+      "last_mother": "Ramírez"
+    },
+    "birth_date": "1990-02-18",
+    "email": "luis.hr@example.com",
+    "phone": "9842233445",
+    "rfc": "HERL900218XXX",
+    "emergency_contact": {
+      "name": "María Ramírez",
+      "phone": "9845566778"
+    },
+    "membership_id": {
+      "$ref": "memberships",
+      "$id": { "$oid": "686f3a64b81f7e28fec8f721" }
+    },
+    "start_date": "2025-01-10",
+    "status": "Activo",
+    "payment": {
+      "method": "transferencia",
+      "amount": 200,
+      "currency": "MXN"
+    },
+    "colaborator_id": {
+      "$ref": "colaborators",
+      "$id": { "$oid": "686bce4efbfae3e91b3dfe0b" }
+    },
+    "created_at": "2025-01-10T08:30:00Z",
+    "updated_at": "2025-01-10T08:30:00Z"
+  },
+  {
+    "full_name": {
+      "name": "Sofía",
+      "last_father": "Gómez",
+      "last_mother": "Delgado"
+    },
+    "birth_date": "1985-11-05",
+    "email": "sofia.gomez@example.com",
+    "phone": "9844455667",
+    "rfc": "GODS851105XXX",
+    "emergency_contact": {
+      "name": "Lucía Gómez",
+      "phone": "9843344556"
+    },
+    "membership_id": {
+      "$ref": "memberships",
+      "$id": { "$oid": "686f3a64b81f7e28fec8f722" }
+    },
+    "start_date": "2024-09-01",
+    "status": "Activo",
+    "payment": {
+      "method": "tarjeta",
+      "amount": 5400,
+      "currency": "MXN"
+    },
+    "colaborator_id": {
+      "$ref": "colaborators",
+      "$id": { "$oid": "686bce4efbfae3e91b3dfe0b" }
+    },
+    "created_at": "2024-09-01T14:00:00Z",
+    "updated_at": "2024-09-01T14:00:00Z"
+  },
+  {
+    "full_name": {
+      "name": "Diego",
+      "last_father": "Pérez",
+      "last_mother": "Santos"
+    },
+    "birth_date": "2000-05-30",
+    "email": "diego.perez@example.com",
+    "phone": "9849988776",
+    "rfc": "PESD000530XXX",
+    "emergency_contact": {
+      "name": "Elena Santos",
+      "phone": "9846677889"
+    },
+    "membership_id": {
+      "$ref": "memberships",
+      "$id": { "$oid": "686f3a64b81f7e28fec8f723" }
+    },
+    "start_date": "2024-08-20",
+    "status": "Activo",
+    "payment": {
+      "method": "efectivo",
+      "amount": 350,
+      "currency": "MXN"
+    },
+    "colaborator_id": {
+      "$ref": "colaborators",
+      "$id": { "$oid": "686bce4efbfae3e91b3dfe0b" }
+    },
+    "created_at": "2024-08-20T10:15:00Z",
+    "updated_at": "2024-08-20T10:15:00Z"
+  }
+]

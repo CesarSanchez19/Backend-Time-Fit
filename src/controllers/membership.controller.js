@@ -26,6 +26,13 @@ export const createMembership = async (req, res) => {
   try {
     const { name_membership, description, price, duration_days, period, status, gym_id } = req.body;
 
+      // Validar si el administrador tiene un gimnasio asignado
+    if (!gym_id || gym_id === '') {
+      return res.status(400).json({
+        message: 'Para crear una membresía, primero debe registrar un gimnasio y asignarlo a su cuenta de administrador.',
+      });
+    }
+    
     const newMembership = new Membership({
       name_membership,
       description,

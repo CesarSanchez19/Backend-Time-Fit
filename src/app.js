@@ -7,6 +7,8 @@ import adminRoutes from './routes/admin.routes.js';
 import gymRoutes from './routes/gym.routes.js';
 import colaboratorRoutes from './routes/colaborator.routes.js';
 import membershipRoutes from './routes/membership.routes.js';
+import clientRoutes from './routes/client.routes.js';
+
 import privateRoutes from './routes/private.routes.js';
 
 connectDB();
@@ -21,6 +23,7 @@ app.use('/api/colaborators', colaboratorRoutes);
 app.use('/api/private', privateRoutes);
 app.use('/api/gyms', gymRoutes);
 app.use('/api/memberships', membershipRoutes);
+app.use('/api/clients', clientRoutes);
 
 
 export default app;

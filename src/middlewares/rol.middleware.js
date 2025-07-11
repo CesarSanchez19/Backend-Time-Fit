@@ -11,3 +11,10 @@ export function isColaboratorOrAdmin(req, res, next) {
   }
   return res.status(403).json({ message: 'Acceso denegado' });
 }
+
+export const isColaborator = (req, res, next) => {
+  if (req.user && req.user.role === 'Colaborador') {
+    return next();
+  }
+  return res.status(403).json({ message: 'Acceso denegado: solo colaboradores' });
+};

@@ -12,13 +12,13 @@ const adminSchema = new Schema({
   admin_code: String,
   rol_id: { type: Schema.Types.ObjectId, ref: 'Role' },
   gym_id: { type: Schema.Types.ObjectId, ref: 'Gym' },
-  created_at: { type: Date, default: Date.now },
-  updated_at: { type: Date, default: Date.now }
-}, { collection: 'administrators' });
+}, {
+  timestamps: true,
+  collection: 'administrators'
+});
 
 adminSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
-
   try {
     const hashed = await bcrypt.hash(this.password, 10);
     this.password = hashed;
