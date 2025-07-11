@@ -1,3 +1,4 @@
+import { createAccessToken } from "../libs/jwt.js";
 import Colaborator from "../models/Colaborator.js";
 import Role from "../models/Role.js";
 import jwt from "jsonwebtoken";
@@ -54,11 +55,13 @@ export const registerColaborator = async (req, res) => {
 
     await colaborator.save();
 
-    const token = jwt.sign(
-      { id: colaborator._id, role: "Colaborador", gym_id },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || "1d" }
-    );
+    const token = await createAccessToken({
+      id: colaborator._id,
+      role: "Colaborador",
+      gym_id,
+    });
+
+    res.cookie("token", token);
 
     res.status(201).json({
       message: "Colaborador creado",
@@ -90,11 +93,13 @@ export const loginColaborator = async (req, res) => {
     const isMatch = await bcrypt.compare(password, colaborator.password);
     if (!isMatch) return res.status(401).json({ message: "Contraseña incorrecta." });
 
-    const token = jwt.sign(
-      { id: colaborator._id, role: colaborator.rol_id.role_name, gym_id: colaborator.gym_id?._id || null },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || "1d" }
-    );
+    const token = await createAccessToken({
+      id: colaborator._id,
+      role: colaborator.rol_id.role_name,
+      gym_id: colaborator.gym_id?._id || null,
+    });
+    
+    res.cookie("token", token);
 
     res.status(200).json({
       message: "Inicio de sesión exitoso",

@@ -1,7 +1,7 @@
+import { createAccessToken } from "../libs/jwt.js";
 import Admin from "../models/Admin.js";
 import Role from "../models/Role.js";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 
 // Función auxiliar
 const getAdminRoleId = async () => {
@@ -24,17 +24,25 @@ export const registerAdmin = async (req, res) => {
     const rol_id = await getAdminRoleId();
 
     const admin = new Admin({
-      username, name, last_name, email, password, admin_code, rol_id,
-      gym_id: gym_id || null
+      username,
+      name,
+      last_name,
+      email,
+      password,
+      admin_code,
+      rol_id,
+      gym_id: gym_id || null,
     });
 
     await admin.save();
 
-    const token = jwt.sign({
+    const token = await createAccessToken({
       id: admin._id,
       role: "Administrador",
       gym_id: admin.gym_id || null,
-    }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || "1d" });
+    });
+
+    res.cookie("token", token);
 
     return res.status(201).json({
       message: "Administrador creado exitosamente",
@@ -66,11 +74,12 @@ export const login = async (req, res) => {
     const isValid = await bcrypt.compare(password, admin.password);
     if (!isValid) return res.status(401).json({ message: "Contraseña incorrecta" });
 
-    const token = jwt.sign({
+    const token = await createAccessToken({
       id: admin._id,
       role: admin.rol_id?.role_name || "unknown",
       gym_id: admin.gym_id?._id || null,
-    }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || "1d" });
+    });
+    res.cookie("token", token);
 
     return res.status(200).json({
       message: "Inicio de sesión exitoso",
@@ -114,7 +123,9 @@ export const updateAdmin = async (req, res) => {
     const updated = await Admin.findByIdAndUpdate(id, updates, {
       new: true,
       runValidators: true,
-    }).populate("rol_id", "role_name").populate("gym_id", "name");
+    })
+      .populate("rol_id", "role_name")
+      .populate("gym_id", "name");
 
     if (!updated) return res.status(404).json({ message: "Administrador no encontrado" });
     res.json(updated);
@@ -141,9 +152,7 @@ export const deleteAdmin = async (req, res) => {
 // Obtener perfil del administrador actual (desde el token)
 export const getMyProfile = async (req, res) => {
   try {
-    const admin = await Admin.findById(req.user.id)
-      .populate("rol_id", "role_name")
-      .populate("gym_id", "name");
+    const admin = await Admin.findById(req.user.id).populate("rol_id", "role_name").populate("gym_id", "name");
 
     if (!admin) {
       return res.status(404).json({ message: "Administrador no encontrado" });
