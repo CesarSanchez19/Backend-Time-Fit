@@ -6,7 +6,7 @@ const addressSchema = new Schema({
   street: { type: String, required: true },
   colony: { type: String, required: true },
   Avenue: { type: String, required: true },
-  'C.P': { type: String, required: true },
+  CodigoPostal: { type: String, required: true },
   City: { type: String, required: true },
   State: { type: String, required: true },
   Country: { type: String, required: true }
