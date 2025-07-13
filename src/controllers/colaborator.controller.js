@@ -1,7 +1,6 @@
 import { createAccessToken } from "../libs/jwt.js";
 import Colaborator from "../models/Colaborator.js";
 import Role from "../models/Role.js";
-import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
 // Ya definidos:
@@ -181,3 +180,34 @@ export const deleteColaborator = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
+
+// ✅ Obtener colaborador específico por ID (solo si pertenece al mismo gimnasio que el admin)
+export const getColaboratorById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const adminGymId = req.user.gym_id; // string
+
+    if (!id) return res.status(400).json({ message: "ID requerido" });
+
+    const colaborator = await Colaborator.findById(id)
+      .populate("rol_id")
+      .populate("gym_id");
+
+    if (!colaborator) 
+      return res.status(404).json({ message: "Colaborador no encontrado" });
+
+    // Extrae correctamente el ID del gym del colaborador
+    const colaboratorGymId = colaborator.gym_id._id
+      ? colaborator.gym_id._id.toString()
+      : colaborator.gym_id.toString();
+
+    if (colaboratorGymId !== adminGymId.toString()) {
+      return res.status(403).json({ message: "No tienes permiso para ver este colaborador" });
+    }
+
+    res.json(colaborator);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+

@@ -5,7 +5,8 @@ import {
   getAllColaborators,
   getMyColaboratorProfile,
   updateColaborator,
-  deleteColaborator
+  deleteColaborator,
+  getColaboratorById
 } from "../controllers/colaborator.controller.js";
 
 import { verifyToken } from "../middlewares/auth.middleware.js";
@@ -22,5 +23,6 @@ router.get("/me", verifyToken, getMyColaboratorProfile); // Solo colaborador aut
 router.get("/all", verifyToken, isAdmin, getAllColaborators); // Solo admin
 router.post("/updated", verifyToken, isAdmin, updateColaborator); // Solo admin
 router.post("/delete", verifyToken, isAdmin, deleteColaborator); // Solo admin
+router.get("/:id", verifyToken, isAdmin, getColaboratorById); // Solo admin puede obtener colaborador por ID
 
 export default router;
