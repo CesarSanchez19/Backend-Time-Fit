@@ -16,9 +16,8 @@ const app = express();
 
 app.use(cors({ origin: 'http://localhost:5173' })); // <--- HABILITAR CORS
 app.use(morgan('dev'));
-app.use(express.json());
-
 app.use(express.json({ limit: '5mb' }));
+
 app.use('/api/admins', adminRoutes);
 app.use('/api/colaborators', colaboratorRoutes);
 app.use('/api/private', privateRoutes);
