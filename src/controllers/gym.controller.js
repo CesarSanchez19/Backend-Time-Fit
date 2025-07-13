@@ -1,5 +1,6 @@
 import Gym from '../models/Gym.js';
 import Admin from '../models/Admin.js';
+import Colaborator from '../models/Colaborator.js';
 import { resizeBase64Image } from '../libs/resizeImage.js';
 
 // Crear gym y asociarlo al admin (solo uno por admin)
@@ -103,7 +104,11 @@ export const deleteGym = async (req, res) => {
     const deleted = await Gym.findByIdAndDelete(id);
     if (!deleted) return res.status(404).json({ message: 'Gimnasio no encontrado' });
 
-    res.json({ message: 'Gimnasio eliminado correctamente' });
+    // ⚠️ Quitar la referencia del gimnasio en administradores y colaboradores
+    await Admin.updateMany({ gym_id: id }, { $unset: { gym_id: "" } });
+    await Colaborator.updateMany({ gym_id: id }, { $unset: { gym_id: "" } });
+
+    res.json({ message: 'Gimnasio y referencias eliminados correctamente' });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
