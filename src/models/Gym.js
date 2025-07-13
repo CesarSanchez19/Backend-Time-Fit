@@ -5,11 +5,11 @@ const { Schema, model } = mongoose;
 const addressSchema = new Schema({
   street: { type: String, required: true },
   colony: { type: String, required: true },
-  Avenue: { type: String, required: true },
-  CodigoPostal: { type: String, required: true },
-  City: { type: String, required: true },
-  State: { type: String, required: true },
-  Country: { type: String, required: true }
+  avenue: { type: String, required: true },
+  codigoPostal: { type: String, required: true },
+  city: { type: String, required: true },
+  state: { type: String, required: true },
+  country: { type: String, required: true }
 }, { _id: false });
 
 const gymSchema = new Schema({
