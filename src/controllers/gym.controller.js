@@ -1,5 +1,6 @@
 import Gym from '../models/Gym.js';
 import Admin from '../models/Admin.js';
+import { resizeBase64Image } from '../libs/resizeImage.js';
 
 // Crear gym y asociarlo al admin (solo uno por admin)
 export const createGym = async (req, res) => {
@@ -16,10 +17,18 @@ export const createGym = async (req, res) => {
       return res.status(400).json({ message: 'Este administrador ya tiene un gimnasio asignado' });
     }
 
-    const newGym = new Gym({ name, address, opening_time, closing_time, logo_url });
-    const savedGym = await newGym.save();
+    // Reducir imagen antes de guardar
+    const compressedLogo = await resizeBase64Image(logo_url);
 
-    // Asociar el gym al admin
+    const newGym = new Gym({
+      name,
+      address,
+      opening_time,
+      closing_time,
+      logo_url: compressedLogo,
+    });
+
+    const savedGym = await newGym.save();
     admin.gym_id = savedGym._id;
     await admin.save();
 
