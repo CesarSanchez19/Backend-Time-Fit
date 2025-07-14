@@ -24,15 +24,26 @@ export const getMembershipById = async (req, res) => {
 // Crear membership
 export const createMembership = async (req, res) => {
   try {
-    const { name_membership, description, price, duration_days, period, status, gym_id } = req.body;
+    const {
+      name_membership,
+      description,
+      price,
+      duration_days,
+      period,
+      status,
+      currency,
+      color,
+      cantidad_usuarios,
+      porcentaje_uso,
+      gym_id
+    } = req.body;
 
-      // Validar si el administrador tiene un gimnasio asignado
-    if (!gym_id || gym_id === '') {
+    if (!gym_id) {
       return res.status(400).json({
         message: 'Para crear una membresía, primero debe registrar un gimnasio y asignarlo a su cuenta de administrador.',
       });
     }
-    
+
     const newMembership = new Membership({
       name_membership,
       description,
@@ -40,7 +51,11 @@ export const createMembership = async (req, res) => {
       duration_days,
       period,
       status,
-      gym_id,
+      currency,
+      color,
+      cantidad_usuarios,
+      porcentaje_uso,
+      gym_id
     });
 
     const saved = await newMembership.save();
@@ -50,6 +65,7 @@ export const createMembership = async (req, res) => {
   }
 };
 
+
 // Actualizar membership (recibiendo el ID en el body)
 export const updateMembership = async (req, res) => {
   const { id, ...dataToUpdate } = req.body;
@@ -58,10 +74,10 @@ export const updateMembership = async (req, res) => {
   try {
     const updated = await Membership.findByIdAndUpdate(id, dataToUpdate, {
       new: true,
-      runValidators: true,
+      runValidators: true
     });
 
-    if (!updated) return res.status(404).json({ message: 'Membresia no encontrada' });
+    if (!updated) return res.status(404).json({ message: 'Membresía no encontrada' });
     res.json(updated);
   } catch (err) {
     res.status(400).json({ error: err.message });
