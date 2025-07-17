@@ -1,31 +1,23 @@
 import express from 'express';
 import { verifyToken } from '../middlewares/auth.middleware.js';
-import { isAdmin, isColaboratorOrAdmin } from '../middlewares/rol.middleware.js';
+import { requireGymContext } from '../middlewares/gym.middleware.js';
 import {
   getAllMemberships,
   getMembershipById,
   createMembership,
   updateMembership,
-  deleteMembership,
-} from '../controllers/membership.controller.js';
+  deleteMembership
+} from '../controllers/membershipController.js';
 
 const router = express.Router();
 
-router.use(verifyToken);
+// **GET** siempre libre (solo requiere token)
+router.get('/', verifyToken, getAllMemberships);
+router.get('/:id', verifyToken, getMembershipById);
 
-// Obtener todas memberships (admin o colaborador)
-router.get('/', isColaboratorOrAdmin, getAllMemberships);
-
-// Obtener una membership por ID (en la URL)
-router.get('/:id', isColaboratorOrAdmin, getMembershipById);
-
-// Crear una nueva membership (solo admin)
-router.post('/created', isAdmin, createMembership);
-
-// Actualizar una membership por ID enviado en el body
-router.post('/updated', isAdmin, updateMembership);
-
-// Eliminar una membership por ID enviado en el body
-router.post('/delete', isAdmin, deleteMembership);
+// **POST** CREAR / ACTUALIZAR / ELIMINAR solo si tiene gym_id
+router.post('/created', verifyToken, requireGymContext, createMembership);
+router.post('/updated', verifyToken, requireGymContext, updateMembership);
+router.post('/deleted', verifyToken, requireGymContext, deleteMembership);
 
 export default router;

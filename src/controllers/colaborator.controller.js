@@ -82,40 +82,58 @@ export const registerColaborator = async (req, res) => {
   }
 };
 
-// ✅ Login colaborador (ya lo tienes)
 export const loginColaborator = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const colaborator = await Colaborator.findOne({ email }).populate("rol_id").populate("gym_id");
-    if (!colaborator) return res.status(404).json({ message: "Colaborador no encontrado." });
+    // 1) Buscamos el colaborador y poblamos rol_id y gym_id
+    const colaborator = await Colaborator
+      .findOne({ email })
+      .populate("rol_id")   // trae role_name + permissions
+      .populate("gym_id");  // trae gym._id + name
 
+    if (!colaborator) {
+      return res.status(404).json({ message: "Colaborador no encontrado." });
+    }
+
+    // 2) Verificamos contraseña
     const isMatch = await bcrypt.compare(password, colaborator.password);
-    if (!isMatch) return res.status(401).json({ message: "Contraseña incorrecta." });
+    if (!isMatch) {
+      return res.status(401).json({ message: "Contraseña incorrecta." });
+    }
 
-    const token = await createAccessToken({
-      id: colaborator._id,
+    // 3) Creamos el payload del JWT con role_name, permissions y gym_id
+    const payload = {
+      id: colaborator._id.toString(),
       role: colaborator.rol_id.role_name,
-      gym_id: colaborator.gym_id?._id || null,
-    });
-    
-    res.cookie("token", token);
+      permissions: colaborator.rol_id.permissions,
+      gym_id: colaborator.gym_id?._id?.toString() || null
+    };
+    const token = await createAccessToken(payload);
 
-    res.status(200).json({
+    // 4) Enviamos respuesta con token + user
+    return res.status(200).json({
       message: "Inicio de sesión exitoso",
       token,
-      colaborator: {
+      user: {
         _id: colaborator._id,
         username: colaborator.username,
         name: colaborator.name,
         last_name: colaborator.last_name,
         email: colaborator.email,
-        role: colaborator.rol_id,
-        gym: colaborator.gym_id,
+        role: {
+          _id: colaborator.rol_id._id,
+          role_name: colaborator.rol_id.role_name,
+          permissions: colaborator.rol_id.permissions
+        },
+        gym_id: colaborator.gym_id?._id || null,
         working_hour: colaborator.working_hour,
-      },
+        createdAt: colaborator.createdAt,
+        updatedAt: colaborator.updatedAt
+      }
     });
   } catch (err) {
-    res.status(500).json({ message: "Error del servidor" });
+    console.error("Error en login colaborador:", err);
+    return res.status(500).json({ message: "Error del servidor" });
   }
 };
 

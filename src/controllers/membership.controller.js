@@ -3,12 +3,18 @@ import Membership from '../models/Membership.js';
 // Obtener todas las memberships
 export const getAllMemberships = async (req, res) => {
   try {
-    const memberships = await Membership.find().populate('gym_id', 'name');
-    res.json(memberships);
+    // Si tiene gym_id, filtramos; si no, devolvemos todo o vacío según tu preferencia
+    const filter = {};
+    if (req.user.gym_id) {
+      filter.gym_id = req.user.gym_id;
+    }
+    const memberships = await Membership.find(filter).populate('gym_id','name');
+    return res.json(memberships);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message });
   }
 };
+
 
 // Obtener membership por id (usando URL param)
 export const getMembershipById = async (req, res) => {

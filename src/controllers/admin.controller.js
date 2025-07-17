@@ -64,41 +64,58 @@ export const registerAdmin = async (req, res) => {
 };
 
 // LOGIN
+e// controllers/adminAuth.js
+
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const admin = await Admin.findOne({ email }).populate("rol_id").populate("gym_id");
+    const admin = await Admin
+      .findOne({ email })
+      .populate("rol_id")   // trae role_name + permissions
+      .populate("gym_id");  // trae gym._id + name
 
-    if (!admin) return res.status(404).json({ message: "Administrador no encontrado" });
+    if (!admin) 
+      return res.status(404).json({ message: "Administrador no encontrado" });
 
     const isValid = await bcrypt.compare(password, admin.password);
-    if (!isValid) return res.status(401).json({ message: "Contraseña incorrecta" });
+    if (!isValid) 
+      return res.status(401).json({ message: "Contraseña incorrecta" });
 
-    const token = await createAccessToken({
-      id: admin._id,
-      role: admin.rol_id?.role_name || "unknown",
-      gym_id: admin.gym_id?._id || null,
-    });
-    res.cookie("token", token);
+    // 1) Creamos el payload del JWT con role_name, permissions y gym_id
+    const payload = {
+      id: admin._id.toString(),
+      role: admin.rol_id.role_name,           // "Administrador"
+      permissions: admin.rol_id.permissions,  // [ "view_clients", ... ]
+      gym_id: admin.gym_id?._id?.toString() || null
+    };
+    const token = await createAccessToken(payload);
 
+    // 2) Respondemos token + user (con la forma que espera el frontend)
     return res.status(200).json({
       message: "Inicio de sesión exitoso",
       token,
-      admin: {
+      user: {
         _id: admin._id,
         username: admin.username,
         name: admin.name,
         last_name: admin.last_name,
         email: admin.email,
-        role: admin.rol_id,
-        gym: admin.gym_id,
-      },
+        role: {
+          _id: admin.rol_id._id,
+          role_name: admin.rol_id.role_name,
+          permissions: admin.rol_id.permissions
+        },
+        gym_id: admin.gym_id?._id || null,
+        createdAt: admin.createdAt,
+        updatedAt: admin.updatedAt
+      }
     });
   } catch (error) {
     console.error("Error en login:", error);
     return res.status(500).json({ message: "Error del servidor" });
   }
 };
+
 
 // OBTENER TODOS LOS ADMINISTRADORES
 export const getAllAdmins = async (req, res) => {
