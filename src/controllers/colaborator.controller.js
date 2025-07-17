@@ -10,17 +10,6 @@ const getColaboratorRoleId = async () => {
   return role._id;
 };
 
-const generateColaboratorCode = (name, last_name) => {
-  const initials = (
-    last_name.trim().split(" ")[0].charAt(0) +
-    last_name.trim().split(" ")[1]?.charAt(0) +
-    name.trim().split(" ")[0].charAt(0) +
-    name.trim().split(" ")[1]?.charAt(0)
-  ).toUpperCase();
-  const random = Math.floor(1000 + Math.random() * 9000);
-  return `${initials}${random}`;
-};
-
 // ✅ Crear colaborador (solo admin)
 export const registerColaborator = async (req, res) => {
   try {
@@ -38,7 +27,6 @@ export const registerColaborator = async (req, res) => {
     if (existsUser) return res.status(400).json({ message: "Nombre de usuario ya en uso." });
 
     const rol_id = await getColaboratorRoleId();
-    const colaborator_code = generateColaboratorCode(name, last_name);
 
     const colaborator = new Colaborator({
       username,
@@ -47,6 +35,7 @@ export const registerColaborator = async (req, res) => {
       email,
       password,
       colaborator_code,
+      color_colaborator,
       rol_id,
       gym_id,
       working_hour,
@@ -120,6 +109,8 @@ export const loginColaborator = async (req, res) => {
         name: colaborator.name,
         last_name: colaborator.last_name,
         email: colaborator.email,
+        colaborator_code: colaborator.colaborator_code,
+        color_colaborator: colaborator.color_colaborator,
         role: {
           _id: colaborator.rol_id._id,
           role_name: colaborator.rol_id.role_name,
