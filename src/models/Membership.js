@@ -9,12 +9,12 @@ const membershipSchema = new Schema({
   duration_days: { type: Number, required: true },
   period: {
     type: String,
-    enum: ['diario', 'semanal', 'quincenal', 'mensual', 'trimestral', 'anual'],
+    enum: [ 'quincenal', 'mensual', 'trimestral', 'anual'],
     required: true
   },
   status: {
     type: String,
-    enum: ['Activado', 'Cancelado'],
+    enum: ['Activado', 'Desactivado'],
     default: 'Activado'
   },
   currency: {

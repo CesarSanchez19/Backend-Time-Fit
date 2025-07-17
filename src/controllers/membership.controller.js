@@ -3,18 +3,27 @@ import Membership from '../models/Membership.js';
 // Obtener todas las memberships
 export const getAllMemberships = async (req, res) => {
   try {
-    const memberships = await Membership.find().populate('gym_id', 'name');
+    const filter = { gym_id: req.user.gym_id }; // <--- scope
+    const memberships = await Membership.find(filter)
+      .populate('gym_id', 'name');
     res.json(memberships);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
+
 // Obtener membership por id (usando URL param)
 export const getMembershipById = async (req, res) => {
   try {
-    const membership = await Membership.findById(req.params.id).populate('gym_id', 'name');
-    if (!membership) return res.status(404).json({ message: 'Membresia no encontrada' });
+    const membership = await Membership.findOne({
+      _id: req.params.id,
+      gym_id: req.user.gym_id, // <--- scope
+    }).populate('gym_id', 'name');
+
+    if (!membership) {
+      return res.status(404).json({ message: 'Membresía no encontrada en tu gimnasio' });
+    }
     res.json(membership);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -35,12 +44,12 @@ export const createMembership = async (req, res) => {
       color,
       cantidad_usuarios,
       porcentaje_uso,
-      gym_id
+      // gym_id  <-- ignorado
     } = req.body;
 
-    if (!gym_id) {
+    if (!req.user.gym_id) {
       return res.status(400).json({
-        message: 'Para crear una membresía, primero debe registrar un gimnasio y asignarlo a su cuenta de administrador.',
+        message: 'Tu usuario no tiene un gimnasio asignado. No puedes crear membresías.',
       });
     }
 
@@ -55,7 +64,7 @@ export const createMembership = async (req, res) => {
       color,
       cantidad_usuarios,
       porcentaje_uso,
-      gym_id
+      gym_id: req.user.gym_id, // <--- forzado
     });
 
     const saved = await newMembership.save();
@@ -66,18 +75,22 @@ export const createMembership = async (req, res) => {
 };
 
 
+
 // Actualizar membership (recibiendo el ID en el body)
 export const updateMembership = async (req, res) => {
-  const { id, ...dataToUpdate } = req.body;
+  const { id, gym_id, ...dataToUpdate } = req.body; // gym_id ignorado
   if (!id) return res.status(400).json({ message: 'ID de la membresía requerido' });
 
   try {
-    const updated = await Membership.findByIdAndUpdate(id, dataToUpdate, {
-      new: true,
-      runValidators: true
-    });
+    const updated = await Membership.findOneAndUpdate(
+      { _id: id, gym_id: req.user.gym_id }, // <--- scope
+      dataToUpdate,
+      { new: true, runValidators: true }
+    );
 
-    if (!updated) return res.status(404).json({ message: 'Membresía no encontrada' });
+    if (!updated) {
+      return res.status(404).json({ message: 'Membresía no encontrada en tu gimnasio' });
+    }
     res.json(updated);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -90,10 +103,17 @@ export const deleteMembership = async (req, res) => {
   if (!id) return res.status(400).json({ message: 'ID de la membresía requerido' });
 
   try {
-    const deleted = await Membership.findByIdAndDelete(id);
-    if (!deleted) return res.status(404).json({ message: 'Membresia no encontrada' });
-    res.json({ message: 'Membresia eliminada correctamente' });
+    const deleted = await Membership.findOneAndDelete({
+      _id: id,
+      gym_id: req.user.gym_id, // <--- scope
+    });
+
+    if (!deleted) {
+      return res.status(404).json({ message: 'Membresía no encontrada en tu gimnasio' });
+    }
+    res.json({ message: 'Membresía eliminada correctamente' });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 };
+

@@ -1,6 +1,8 @@
 import express from 'express';
 import { verifyToken } from '../middlewares/auth.middleware.js';
 import { isAdmin, isColaboratorOrAdmin } from '../middlewares/rol.middleware.js';
+import { requireGymContext } from '../middlewares/requireGymContext.js'; 
+
 import {
   getAllMemberships,
   getMembershipById,
@@ -13,19 +15,22 @@ const router = express.Router();
 
 router.use(verifyToken);
 
+// Todas estas requieren que el usuario tenga gym asignado
+router.use(requireGymContext);
+
 // Obtener todas memberships (admin o colaborador)
 router.get('/', isColaboratorOrAdmin, getAllMemberships);
 
-// Obtener una membership por ID (en la URL)
+// Obtener una membership por ID
 router.get('/:id', isColaboratorOrAdmin, getMembershipById);
 
-// Crear una nueva membership (solo admin)
+// Crear
 router.post('/created', isAdmin, createMembership);
 
-// Actualizar una membership por ID enviado en el body
+// Actualizar
 router.post('/updated', isAdmin, updateMembership);
 
-// Eliminar una membership por ID enviado en el body
+// Eliminar
 router.post('/delete', isAdmin, deleteMembership);
 
 export default router;
