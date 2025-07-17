@@ -1,4 +1,3 @@
-// middlewares/gym.middleware.js
 export function requireGymContext(req, res, next) {
   // Suponiendo que verifyToken ya puso req.user
   if (!req.user || !req.user.gym_id) {

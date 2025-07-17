@@ -3,7 +3,6 @@ import Membership from '../models/Membership.js';
 // Obtener todas las memberships
 export const getAllMemberships = async (req, res) => {
   try {
-    // Si tiene gym_id, filtramos; si no, devolvemos todo o vacío según tu preferencia
     const filter = {};
     if (req.user.gym_id) {
       filter.gym_id = req.user.gym_id;
@@ -14,7 +13,6 @@ export const getAllMemberships = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
-
 
 // Obtener membership por id (usando URL param)
 export const getMembershipById = async (req, res) => {
@@ -27,7 +25,7 @@ export const getMembershipById = async (req, res) => {
   }
 };
 
-// Crear membership
+// Crear membership (usando gym_id de req.user)
 export const createMembership = async (req, res) => {
   try {
     const {
@@ -41,8 +39,10 @@ export const createMembership = async (req, res) => {
       color,
       cantidad_usuarios,
       porcentaje_uso,
-      gym_id
     } = req.body;
+
+    // Aquí usamos gym_id del token, no del body
+    const gym_id = req.user.gym_id;
 
     if (!gym_id) {
       return res.status(400).json({
@@ -70,7 +70,6 @@ export const createMembership = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
-
 
 // Actualizar membership (recibiendo el ID en el body)
 export const updateMembership = async (req, res) => {

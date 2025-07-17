@@ -29,4 +29,3 @@ const membershipSchema = new Schema({
 }, { timestamps: true, collection: 'memberships' });
 
 export default model('memberships', membershipSchema);
-
