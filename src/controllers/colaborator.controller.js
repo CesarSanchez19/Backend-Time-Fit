@@ -13,7 +13,7 @@ const getColaboratorRoleId = async () => {
 // ✅ Crear colaborador (solo admin)
 export const registerColaborator = async (req, res) => {
   try {
-    const { username, name, last_name, email, password, working_hour } = req.body;
+    const { username, name, last_name, email, password, working_hour, color_colaborator } = req.body; // Asegúrate de que color_colaborator esté en la solicitud
     const gym_id = req.user.gym_id;
 
     if (!gym_id) {
@@ -34,8 +34,7 @@ export const registerColaborator = async (req, res) => {
       last_name,
       email,
       password,
-      colaborator_code,
-      color_colaborator,
+      color_colaborator: color_colaborator || 'Verde', // Si no se pasa un color, usa 'Verde' como valor por defecto
       rol_id,
       gym_id,
       working_hour,
@@ -63,6 +62,7 @@ export const registerColaborator = async (req, res) => {
         role: { role_name: "Colaborador" },
         gym: gym_id,
         working_hour,
+        color_colaborator: colaborator.color_colaborator, // Añadir color en la respuesta
       },
     });
   } catch (err) {
@@ -70,6 +70,7 @@ export const registerColaborator = async (req, res) => {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
+
 
 export const loginColaborator = async (req, res) => {
   try {
