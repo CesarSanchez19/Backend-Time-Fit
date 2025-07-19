@@ -10,7 +10,7 @@ import {
 } from "../controllers/colaborator.controller.js";
 
 import { verifyToken } from "../middlewares/auth.middleware.js";
-import { isAdmin, isColaboratorOrAdmin } from "../middlewares/rol.middleware.js";
+import { isAdmin } from "../middlewares/rol.middleware.js";
 
 const router = Router();
 

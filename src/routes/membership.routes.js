@@ -7,7 +7,7 @@ import {
   createMembership,
   updateMembership,
   deleteMembership
-} from '../controllers/membershipController.js';
+} from '../controllers/membership.controller.js';
 
 const router = express.Router();
 

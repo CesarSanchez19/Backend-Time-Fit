@@ -12,8 +12,9 @@ const getColaboratorRoleId = async () => {
 
 // ✅ Crear colaborador (solo admin)
 export const registerColaborator = async (req, res) => {
+  
   try {
-    const { username, name, last_name, email, password, working_hour, color_colaborator } = req.body; // Asegúrate de que color_colaborator esté en la solicitud
+    const { username, name, last_name, email, password, working_hour, color_colaborator, colaborator_code } = req.body;
     const gym_id = req.user.gym_id;
 
     if (!gym_id) {
@@ -35,6 +36,7 @@ export const registerColaborator = async (req, res) => {
       email,
       password,
       color_colaborator: color_colaborator || 'Verde', // Si no se pasa un color, usa 'Verde' como valor por defecto
+      colaborator_code: colaborator_code,  
       rol_id,
       gym_id,
       working_hour,
