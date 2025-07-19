@@ -14,7 +14,7 @@ const getColaboratorRoleId = async () => {
 export const registerColaborator = async (req, res) => {
   
   try {
-    const { username, name, last_name, email, password, working_hour, color_colaborator, colaborator_code } = req.body;
+    const { username, name, last_name, email, password, working_hour, color, colaborator_code } = req.body;
     const gym_id = req.user.gym_id;
 
     if (!gym_id) {
@@ -35,7 +35,7 @@ export const registerColaborator = async (req, res) => {
       last_name,
       email,
       password,
-      color_colaborator: color_colaborator || 'Verde', // Si no se pasa un color, usa 'Verde' como valor por defecto
+      color,
       colaborator_code: colaborator_code,  
       rol_id,
       gym_id,
@@ -63,8 +63,9 @@ export const registerColaborator = async (req, res) => {
         email,
         role: { role_name: "Colaborador" },
         gym: gym_id,
+        color,
+        colaborator_code,
         working_hour,
-        color_colaborator: colaborator.color_colaborator, // Añadir color en la respuesta
       },
     });
   } catch (err) {
@@ -113,7 +114,7 @@ export const loginColaborator = async (req, res) => {
         last_name: colaborator.last_name,
         email: colaborator.email,
         colaborator_code: colaborator.colaborator_code,
-        color_colaborator: colaborator.color_colaborator,
+        color: colaborator.color,
         role: {
           _id: colaborator.rol_id._id,
           role_name: colaborator.rol_id.role_name,
