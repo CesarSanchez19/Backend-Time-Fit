@@ -9,22 +9,10 @@ const getColaboratorRoleId = async () => {
   if (!role) throw new Error("Rol de colaborador no encontrado");
   return role._id;
 };
-
-const generateColaboratorCode = (name, last_name) => {
-  const initials = (
-    last_name.trim().split(" ")[0].charAt(0) +
-    last_name.trim().split(" ")[1]?.charAt(0) +
-    name.trim().split(" ")[0].charAt(0) +
-    name.trim().split(" ")[1]?.charAt(0)
-  ).toUpperCase();
-  const random = Math.floor(1000 + Math.random() * 9000);
-  return `${initials}${random}`;
-};
-
 // ✅ Crear colaborador (solo admin)
 export const registerColaborator = async (req, res) => {
   try {
-    const { username, name, last_name, email, password, working_hour } = req.body;
+    const { username, name, last_name, email, password, colaborator_code, color, working_hour } = req.body;
     const gym_id = req.user.gym_id;
 
     if (!gym_id) {
@@ -38,7 +26,6 @@ export const registerColaborator = async (req, res) => {
     if (existsUser) return res.status(400).json({ message: "Nombre de usuario ya en uso." });
 
     const rol_id = await getColaboratorRoleId();
-    const colaborator_code = generateColaboratorCode(name, last_name);
 
     const colaborator = new Colaborator({
       username,
@@ -47,6 +34,7 @@ export const registerColaborator = async (req, res) => {
       email,
       password,
       colaborator_code,
+      color,
       rol_id,
       gym_id,
       working_hour,
@@ -73,6 +61,8 @@ export const registerColaborator = async (req, res) => {
         email,
         role: { role_name: "Colaborador" },
         gym: gym_id,
+        colaborator_code,
+        color,
         working_hour,
       },
     });
@@ -111,6 +101,8 @@ export const loginColaborator = async (req, res) => {
         email: colaborator.email,
         role: colaborator.rol_id,
         gym: colaborator.gym_id,
+        colaborator_code: colaborator.colaborator_code,
+        color: colaborator.color,
         working_hour: colaborator.working_hour,
       },
     });

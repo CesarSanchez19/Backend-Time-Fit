@@ -11,6 +11,7 @@ const colaboratorSchema = new Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   colaborator_code: { type: String, required: true },
+  color: { type: String, default: 'Verde' },
   rol_id: { type: Schema.Types.ObjectId, ref: 'Role', required: true },
   gym_id: { type: Schema.Types.ObjectId, ref: 'Gym', required: true },
   working_hour: {
