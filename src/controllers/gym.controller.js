@@ -62,10 +62,15 @@ export const getMyGym = async (req, res) => {
         return res.status(404).json({ message: 'Este administrador no tiene gimnasio asignado' });
       }
       gymId = admin.gym_id;
+    } else if (role === 'Colaborador') {
+      const colaborator = await Colaborator.findById(userId);
+      if (!colaborator || !colaborator.gym_id) {
+        return res.status(404).json({ message: 'Este colaborador no tiene gimnasio asignado' });
+      }
+      gymId = colaborator.gym_id;
+    } else {
+      return res.status(403).json({ message: 'Rol no autorizado para acceder a gimnasio' });
     }
-
-    // Si luego agregas lógica para colaboradores, aquí puedes manejarlo
-    // por ahora solo funciona con Administradores
 
     const gym = await Gym.findById(gymId);
     if (!gym) return res.status(404).json({ message: 'Gimnasio no encontrado' });
