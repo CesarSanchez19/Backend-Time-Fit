@@ -24,7 +24,10 @@ const clientSchema = new Schema({
     amount: Number,
     currency: String,
   },
-  colaborator_id: { type: Schema.Types.ObjectId, ref: 'Colaborator', required: true },
+  registered_by_id: { type: Schema.Types.ObjectId, required: true },
+  registered_by_type: { type: String, enum: ['Administrador', 'Colaborador'], required: true },
+  updated_by_id: { type: Schema.Types.ObjectId },   // nuevo
+  updated_by_type: { type: String, enum: ['Administrador', 'Colaborador'] },  // nuevo
   gym_id: { type: Schema.Types.ObjectId, ref: 'Gym', required: true },
 }, {
   timestamps: true,

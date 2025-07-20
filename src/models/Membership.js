@@ -28,5 +28,5 @@ const membershipSchema = new Schema({
   gym_id: { type: Schema.Types.ObjectId, ref: 'Gym', required: true }
 }, { timestamps: true, collection: 'memberships' });
 
-export default model('memberships', membershipSchema);
+export default model('Membership', membershipSchema);
 

@@ -20,7 +20,7 @@ const gymSchema = new Schema({
   logo_url: { type: String, default: null }
 }, {
   collection: 'gyms',
-  timestamps: true  // Esto crea automáticamente createdAt y updatedAt
+  timestamps: true
 });
 
 export default model('Gym', gymSchema);

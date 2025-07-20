@@ -7,12 +7,12 @@ import {
   deleteClient
 } from '../controllers/client.controller.js';
 import { verifyToken } from '../middlewares/auth.middleware.js';
-import { isColaborator } from '../middlewares/rol.middleware.js';
+import { isColaboratorOrAdmin } from '../middlewares/rol.middleware.js';
 
 const router = express.Router();
 
 router.use(verifyToken);
-router.use(isColaborator); // solo colaboradores pueden usar estas rutas
+router.use(isColaboratorOrAdmin);
 
 router.post('/created', createClient);
 router.post('/updated', updateClient);
