@@ -8,6 +8,8 @@ import gymRoutes from './routes/gym.routes.js';
 import colaboratorRoutes from './routes/colaborator.routes.js';
 import membershipRoutes from './routes/membership.routes.js';
 import clientRoutes from './routes/client.routes.js';
+import productRoutes from './routes/product.routes.js';
+import supplierRoutes from './routes/supplier.routes.js';
 
 import privateRoutes from './routes/private.routes.js';
 
@@ -24,6 +26,8 @@ app.use('/api/private', privateRoutes);
 app.use('/api/gyms', gymRoutes);
 app.use('/api/memberships', membershipRoutes);
 app.use('/api/clients', clientRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/suppliers', supplierRoutes);
 
 
 export default app;
