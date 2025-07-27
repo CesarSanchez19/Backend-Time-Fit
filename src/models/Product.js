@@ -1,4 +1,3 @@
-// models/Product.js
 import mongoose from 'mongoose';
 
 const { Schema, model } = mongoose;
@@ -48,7 +47,7 @@ const productSchema = new Schema({
   status: {
     type: String,
     enum: ['Activo', 'Inactivo', 'Agotado', 'Cancelado'],
-    default: 'active'
+    default: 'Activo'
   },
   supplier_id: { 
     type: Schema.Types.ObjectId, 
@@ -63,6 +62,11 @@ const productSchema = new Schema({
   image_url: { 
     type: String,
     default: null
+  },
+  cardColor: { 
+    type: String, 
+    enum: ['Azul', 'Verde', 'Naranja', 'Rojo', 'Morado', 'Turquesa', 'Rosa', 'Amarillo', 'Cian', 'Lima'],
+    default: 'Azul' // Valor predeterminado
   },
   // Campos de auditoría
   registered_by_id: { 

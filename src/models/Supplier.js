@@ -9,12 +9,20 @@ const supplierSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    trim: true
+    trim: true,
+    required: true
   },
   email: {
     type: String,
     trim: true,
-    lowercase: true
+    lowercase: true,
+    required: true
+  },
+  color: {
+    type: String,
+    enum: ['Verde', 'Rojo', 'Azul', 'Naranja', 'Amarillo', 'Morado', 'Rosa', 'Durazno', 'Turquesa', 'RojoVino', 'Lima', 'Cian', 'Lavanda', 'Magenta', 'Coral'],
+    default: 'Verde',
+    required: true
   },
   gym_id: { 
     type: mongoose.Schema.Types.ObjectId, 

@@ -32,9 +32,7 @@ export const getAllSuppliers = async (req, res) => {
             }
 
             if (registeredByInfo) {
-              supplierObj.registered_by_name = `${registeredByInfo.name || ""} ${
-                registeredByInfo.last_name || ""
-              }`.trim();
+              supplierObj.registered_by_name = `${registeredByInfo.name || ""} ${registeredByInfo.last_name || ""}`.trim();
             }
           }
 
@@ -135,7 +133,7 @@ export const getSupplierById = async (req, res) => {
 export const createSupplier = async (req, res) => {
   try {
     const { id: user_id, role } = req.user;
-    const { name, phone, email } = req.body;
+    const { name, phone, email, color } = req.body;
     const gym_id = req.user.gym_id;
 
     if (!gym_id) {
@@ -167,6 +165,7 @@ export const createSupplier = async (req, res) => {
       name: name.trim(),
       phone: phone ? phone.trim() : "",
       email: email ? email.toLowerCase().trim() : "",
+      color: color || "Verde", // Default color if not provided
       gym_id,
       registered_by_id: user_id,
       registered_by_type: role,
@@ -208,6 +207,10 @@ export const updateSupplier = async (req, res) => {
     }
     if (dataToUpdate.email) {
       dataToUpdate.email = dataToUpdate.email.toLowerCase().trim();
+    }
+
+    if (dataToUpdate.color) {
+      dataToUpdate.color = dataToUpdate.color.trim();
     }
 
     // Buscar el proveedor primero

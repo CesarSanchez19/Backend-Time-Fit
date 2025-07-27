@@ -1,4 +1,4 @@
-// routes/product.routes.js
+// routes/supplier.routes.js
 import { Router } from "express";
 import {
   getAllSuppliers,
