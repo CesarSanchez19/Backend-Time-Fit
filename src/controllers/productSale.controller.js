@@ -4,7 +4,7 @@ import Client from '../models/Clients.js';
 import Admin from '../models/Admin.js';
 import Colaborator from '../models/Colaborator.js';
 
-// ✅ Vender producto (admin y colaborador)
+// ✅ Vender producto (admin y colaborador) - MEJORADO
 export const sellProduct = async (req, res) => {
   try {
     const { id: user_id, role, gym_id } = req.user;
@@ -108,15 +108,17 @@ export const sellProduct = async (req, res) => {
 
     await productSale.save();
 
-    // Actualizar el stock del producto
+    // 🆕 ACTUALIZAR STOCK Y VENTAS OBTENIDAS DEL PRODUCTO
     const newQuantity = product.stock.quantity - quantity_sold;
     const newStatus = newQuantity === 0 ? 'Agotado' : product.status;
+    const newSalesObtained = (product.sales_obtained || 0) + quantity_sold;
 
     await Product.findByIdAndUpdate(
       product_id,
       { 
         'stock.quantity': newQuantity,
         status: newStatus,
+        sales_obtained: newSalesObtained, // 🔥 INCREMENTAR VENTAS OBTENIDAS
         updated_by_id: user_id,
         updated_by_type: role,
         updated_at: new Date()
@@ -125,7 +127,7 @@ export const sellProduct = async (req, res) => {
 
     // Poblar la venta con referencias
     const populatedSale = await ProductSale.findById(productSale._id)
-      .populate('product_id', 'name_product price category')
+      .populate('product_id', 'name_product price category sales_obtained')
       .populate('client_id', 'full_name email phone')
       .populate('gym_id', 'name_gym');
 
@@ -137,6 +139,8 @@ export const sellProduct = async (req, res) => {
         name: product.name_product,
         previous_stock: product.stock.quantity,
         new_stock: newQuantity,
+        previous_sales: product.sales_obtained || 0,
+        new_sales: newSalesObtained, // 🔥 MOSTRAR NUEVAS VENTAS
         status: newStatus
       }
     });
@@ -186,9 +190,9 @@ export const getAllSales = async (req, res) => {
     // Calcular paginación
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // Obtener ventas con populate
+    // Obtener ventas con populate (incluyendo sales_obtained)
     const sales = await ProductSale.find(filters)
-      .populate('product_id', 'name_product price category stock')
+      .populate('product_id', 'name_product price category stock sales_obtained')
       .populate('client_id', 'full_name email phone status')
       .populate('gym_id', 'name_gym')
       .sort({ sale_date: -1 })
@@ -253,7 +257,7 @@ export const getSaleById = async (req, res) => {
     }
 
     const sale = await ProductSale.findById(id)
-      .populate('product_id', 'name_product price category stock barcode')
+      .populate('product_id', 'name_product price category stock barcode sales_obtained')
       .populate('client_id', 'full_name email phone status membership_id')
       .populate('gym_id', 'name_gym address')
       .populate({
@@ -289,7 +293,7 @@ export const getSaleById = async (req, res) => {
   }
 };
 
-// ✅ Cancelar venta (solo admin)
+// ✅ Cancelar venta (solo admin) - MEJORADO
 export const cancelSale = async (req, res) => {
   try {
     const { id, reason } = req.body;
@@ -319,18 +323,20 @@ export const cancelSale = async (req, res) => {
       });
     }
 
-    // Buscar el producto para devolver el stock
+    // Buscar el producto para devolver el stock y restar las ventas
     const product = await Product.findById(sale.product_id);
     if (product) {
-      // Devolver el stock
+      // 🆕 DEVOLVER STOCK Y RESTAR VENTAS OBTENIDAS
       const newQuantity = product.stock.quantity + sale.quantity_sold;
       const newStatus = product.status === 'Agotado' && newQuantity > 0 ? 'Activo' : product.status;
+      const newSalesObtained = Math.max(0, (product.sales_obtained || 0) - sale.quantity_sold);
 
       await Product.findByIdAndUpdate(
         sale.product_id,
         { 
           'stock.quantity': newQuantity,
           status: newStatus,
+          sales_obtained: newSalesObtained, // 🔥 RESTAR VENTAS OBTENIDAS
           updated_by_id: user_id,
           updated_by_type: role,
           updated_at: new Date()
@@ -356,10 +362,12 @@ export const cancelSale = async (req, res) => {
     res.json({
       message: "Venta cancelada exitosamente",
       sale: updatedSale,
-      stock_restored: product ? {
+      product_restored: product ? {
         product_name: product.name_product,
         quantity_restored: sale.quantity_sold,
-        new_stock: product.stock.quantity + sale.quantity_sold
+        new_stock: product.stock.quantity + sale.quantity_sold,
+        previous_sales: product.sales_obtained + sale.quantity_sold,
+        new_sales: Math.max(0, (product.sales_obtained || 0) - sale.quantity_sold) // 🔥 MOSTRAR VENTAS ACTUALIZADAS
       } : null
     });
 
