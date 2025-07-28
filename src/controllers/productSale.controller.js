@@ -1,44 +1,106 @@
 import ProductSale from '../models/ProductSale.js';
 import Product from '../models/Product.js';
+import Client from '../models/Clients.js';
 import Admin from '../models/Admin.js';
 import Colaborator from '../models/Colaborator.js';
 
-// Realizar una venta
+// ✅ Vender producto (admin y colaborador)
 export const sellProduct = async (req, res) => {
   try {
     const { id: user_id, role, gym_id } = req.user;
-    const { product_id, quantity_sold, sale_code, sale_price, client_id, client_name } = req.body;
+    const {
+      product_id,
+      quantity_sold,
+      sale_code,
+      sale_price,
+      client_id,
+      client_name,
+      seller_id,
+      seller_name
+    } = req.body;
 
-    // Verificar si el producto existe
+    console.log('Datos recibidos para venta:', req.body);
+
+    // Validaciones básicas
+    if (!product_id || !quantity_sold || !sale_code || !client_id) {
+      return res.status(400).json({ 
+        message: "Datos requeridos: product_id, quantity_sold, sale_code, client_id" 
+      });
+    }
+
+    if (quantity_sold <= 0) {
+      return res.status(400).json({ 
+        message: "La cantidad vendida debe ser mayor a 0" 
+      });
+    }
+
+    // Verificar que el producto existe y pertenece al gimnasio
     const product = await Product.findOne({ _id: product_id, gym_id });
     if (!product) {
-      return res.status(404).json({ message: "Producto no encontrado en este gimnasio" });
+      return res.status(404).json({ 
+        message: "Producto no encontrado o no pertenece a tu gimnasio" 
+      });
     }
 
-    // Verificar si hay suficiente stock
+    // Verificar stock disponible
     if (product.stock.quantity < quantity_sold) {
-      return res.status(400).json({ message: `Stock insuficiente. Stock disponible: ${product.stock.quantity}` });
+      return res.status(400).json({ 
+        message: `Stock insuficiente. Stock disponible: ${product.stock.quantity} ${product.stock.unit}` 
+      });
     }
 
-    // Actualizar el stock del producto
-    product.stock.quantity -= quantity_sold;
-    await product.save();
+    // Verificar que el cliente existe y pertenece al gimnasio
+    const client = await Client.findOne({ _id: client_id, gym_id });
+    if (!client) {
+      return res.status(404).json({ 
+        message: "Cliente no encontrado o no pertenece a tu gimnasio" 
+      });
+    }
 
-    // Crear un nuevo registro de venta
+    // Verificar que el código de venta es único
+    const existingSale = await ProductSale.findOne({ sale_code });
+    if (existingSale) {
+      return res.status(400).json({ 
+        message: "El código de venta ya existe. Genera uno nuevo." 
+      });
+    }
+
+    // Calcular precio total (usar el precio enviado o el del producto)
+    const unitPrice = sale_price ? parseFloat(sale_price) / quantity_sold : product.price.amount;
+    const totalSale = unitPrice * quantity_sold;
+
+    // Obtener nombre completo del cliente
+    const fullClientName = client.full_name 
+      ? `${client.full_name.first || ''} ${client.full_name.last_father || ''} ${client.full_name.last_mother || ''}`.trim()
+      : client_name || 'Cliente sin nombre';
+
+    // Obtener información del vendedor
+    let sellerInfo = { name: seller_name || 'Vendedor', role: role };
+    if (role === 'Administrador') {
+      const admin = await Admin.findById(user_id, 'name last_name');
+      if (admin) {
+        sellerInfo.name = `${admin.name || ''} ${admin.last_name || ''}`.trim();
+      }
+    } else if (role === 'Colaborador') {
+      const colaborator = await Colaborator.findById(user_id, 'name last_name');
+      if (colaborator) {
+        sellerInfo.name = `${colaborator.name || ''} ${colaborator.last_name || ''}`.trim();
+      }
+    }
+
+    // Crear la venta
     const productSale = new ProductSale({
       product_id,
       product_name: product.name_product,
-      unit_price: product.price.amount,
+      unit_price: unitPrice,
       quantity_sold,
       sale_code,
       client_id,
-      client_name,
-      sale_date: new Date(),
+      client_name: fullClientName,
       seller_id: user_id,
-      seller_name: req.user.name,
+      seller_name: sellerInfo.name,
       seller_role: role,
-      sale_status: 'Exitosa',
-      total_sale: sale_price || (product.price.amount * quantity_sold),
+      total_sale: totalSale,
       gym_id,
       registered_by_id: user_id,
       registered_by_type: role
@@ -46,81 +108,266 @@ export const sellProduct = async (req, res) => {
 
     await productSale.save();
 
-    res.status(201).json({ message: "Venta registrada exitosamente", productSale });
+    // Actualizar el stock del producto
+    const newQuantity = product.stock.quantity - quantity_sold;
+    const newStatus = newQuantity === 0 ? 'Agotado' : product.status;
+
+    await Product.findByIdAndUpdate(
+      product_id,
+      { 
+        'stock.quantity': newQuantity,
+        status: newStatus,
+        updated_by_id: user_id,
+        updated_by_type: role,
+        updated_at: new Date()
+      }
+    );
+
+    // Poblar la venta con referencias
+    const populatedSale = await ProductSale.findById(productSale._id)
+      .populate('product_id', 'name_product price category')
+      .populate('client_id', 'full_name email phone')
+      .populate('gym_id', 'name_gym');
+
+    res.status(201).json({
+      message: "Venta registrada exitosamente",
+      sale: populatedSale,
+      product_updated: {
+        id: product_id,
+        name: product.name_product,
+        previous_stock: product.stock.quantity,
+        new_stock: newQuantity,
+        status: newStatus
+      }
+    });
+
   } catch (err) {
-    console.error('Error realizando venta:', err);
-    res.status(500).json({ message: 'Error interno del servidor', error: err.message });
+    console.error("Error procesando venta:", err);
+    res.status(500).json({ 
+      message: "Error interno del servidor", 
+      error: err.message 
+    });
   }
 };
 
-// Cancelar una venta (solo administrador)
-export const cancelSale = async (req, res) => {
+// ✅ Obtener todas las ventas del gimnasio (admin y colaborador)
+export const getAllSales = async (req, res) => {
   try {
-    const { sale_id } = req.body; // El ID ahora se recibe dentro del cuerpo de la solicitud
     const { gym_id } = req.user;
 
-    // Verificar si la venta existe
-    const sale = await ProductSale.findOne({ _id: sale_id, gym_id });
-    if (!sale) {
-      return res.status(404).json({ message: "Venta no encontrada en este gimnasio" });
+    if (!gym_id) {
+      return res.status(400).json({ message: "El usuario no tiene un gimnasio asignado." });
     }
 
-    // Solo el administrador puede cancelar la venta
-    if (req.user.role !== 'Administrador') {
-      return res.status(403).json({ message: "Acción solo permitida para administradores" });
+    // Obtener parámetros de filtrado opcionales
+    const { 
+      status, 
+      start_date, 
+      end_date, 
+      client_id, 
+      product_id,
+      page = 1, 
+      limit = 50 
+    } = req.query;
+
+    // Construir filtros
+    const filters = { gym_id };
+    
+    if (status) filters.sale_status = status;
+    if (client_id) filters.client_id = client_id;
+    if (product_id) filters.product_id = product_id;
+    
+    if (start_date || end_date) {
+      filters.sale_date = {};
+      if (start_date) filters.sale_date.$gte = new Date(start_date);
+      if (end_date) filters.sale_date.$lte = new Date(end_date);
     }
 
-    // Eliminar la venta
-    const product = await Product.findById(sale.product_id);
-    product.stock.quantity += sale.quantity_sold; // Revertir stock
-    await product.save();
+    // Calcular paginación
+    const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    await ProductSale.findByIdAndDelete(sale_id);
+    // Obtener ventas con populate
+    const sales = await ProductSale.find(filters)
+      .populate('product_id', 'name_product price category stock')
+      .populate('client_id', 'full_name email phone status')
+      .populate('gym_id', 'name_gym')
+      .sort({ sale_date: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
 
-    res.json({ message: "Venta cancelada y stock actualizado" });
+    // Contar total de ventas
+    const totalSales = await ProductSale.countDocuments(filters);
+
+    // Calcular estadísticas
+    const stats = await ProductSale.aggregate([
+      { $match: filters },
+      {
+        $group: {
+          _id: null,
+          total_revenue: { $sum: '$total_sale' },
+          total_products_sold: { $sum: '$quantity_sold' },
+          avg_sale_amount: { $avg: '$total_sale' }
+        }
+      }
+    ]);
+
+    const salesStats = stats[0] || {
+      total_revenue: 0,
+      total_products_sold: 0,
+      avg_sale_amount: 0
+    };
+
+    res.json({
+      message: "Ventas obtenidas exitosamente",
+      sales,
+      pagination: {
+        current_page: parseInt(page),
+        total_pages: Math.ceil(totalSales / parseInt(limit)),
+        total_sales: totalSales,
+        per_page: parseInt(limit)
+      },
+      statistics: {
+        total_revenue: salesStats.total_revenue,
+        total_products_sold: salesStats.total_products_sold,
+        average_sale_amount: Math.round(salesStats.avg_sale_amount * 100) / 100
+      }
+    });
+
   } catch (err) {
-    console.error('Error cancelando venta:', err);
-    res.status(500).json({ message: 'Error interno del servidor', error: err.message });
+    console.error("Error obteniendo ventas:", err);
+    res.status(500).json({ 
+      message: "Error interno del servidor", 
+      error: err.message 
+    });
   }
 };
 
-// Obtener el detalle de una venta
+// ✅ Obtener venta por ID (admin y colaborador)
 export const getSaleById = async (req, res) => {
   try {
-    const { id: sale_id } = req.params;
+    const { id } = req.params;
     const { gym_id } = req.user;
 
-    // Obtener detalles de la venta
-    const sale = await ProductSale.findOne({ _id: sale_id, gym_id })
-      .populate('product_id', 'name_product price')
-      .populate('client_id', 'full_name')
-      .populate('seller_id', 'name last_name');
+    if (!id) {
+      return res.status(400).json({ message: "ID de la venta requerido" });
+    }
+
+    const sale = await ProductSale.findById(id)
+      .populate('product_id', 'name_product price category stock barcode')
+      .populate('client_id', 'full_name email phone status membership_id')
+      .populate('gym_id', 'name_gym address')
+      .populate({
+        path: 'client_id',
+        populate: {
+          path: 'membership_id',
+          select: 'name_membership duration_days price'
+        }
+      });
 
     if (!sale) {
       return res.status(404).json({ message: "Venta no encontrada" });
     }
 
-    res.json({ message: "Venta obtenida exitosamente", sale });
+    // Verificar que la venta pertenezca al mismo gimnasio
+    if (sale.gym_id._id.toString() !== gym_id.toString()) {
+      return res.status(403).json({ 
+        message: "No tienes permiso para acceder a esta venta" 
+      });
+    }
+
+    res.json({
+      message: "Venta obtenida exitosamente",
+      sale
+    });
+
   } catch (err) {
-    console.error('Error obteniendo venta:', err);
-    res.status(500).json({ message: 'Error interno del servidor', error: err.message });
+    console.error("Error obteniendo venta por ID:", err);
+    res.status(500).json({ 
+      message: "Error interno del servidor", 
+      error: err.message 
+    });
   }
 };
 
-// Obtener todo el historial de ventas
-export const getAllSales = async (req, res) => {
+// ✅ Cancelar venta (solo admin)
+export const cancelSale = async (req, res) => {
   try {
-    const { gym_id } = req.user;
+    const { id, reason } = req.body;
+    const { id: user_id, role, gym_id } = req.user;
 
-    const sales = await ProductSale.find({ gym_id })
-      .populate('product_id', 'name_product price')
-      .populate('client_id', 'full_name')
-      .populate('seller_id', 'name last_name')
-      .sort({ sale_date: -1 });
+    if (!id) {
+      return res.status(400).json({ message: "ID de la venta requerido" });
+    }
 
-    res.json({ message: "Historial de ventas", sales });
+    // Buscar la venta
+    const sale = await ProductSale.findById(id);
+    if (!sale) {
+      return res.status(404).json({ message: "Venta no encontrada" });
+    }
+
+    // Verificar que la venta pertenezca al mismo gimnasio
+    if (sale.gym_id.toString() !== gym_id.toString()) {
+      return res.status(403).json({ 
+        message: "No tienes permiso para cancelar esta venta" 
+      });
+    }
+
+    // Verificar que la venta no esté ya cancelada
+    if (sale.sale_status === 'Cancelada') {
+      return res.status(400).json({ 
+        message: "Esta venta ya está cancelada" 
+      });
+    }
+
+    // Buscar el producto para devolver el stock
+    const product = await Product.findById(sale.product_id);
+    if (product) {
+      // Devolver el stock
+      const newQuantity = product.stock.quantity + sale.quantity_sold;
+      const newStatus = product.status === 'Agotado' && newQuantity > 0 ? 'Activo' : product.status;
+
+      await Product.findByIdAndUpdate(
+        sale.product_id,
+        { 
+          'stock.quantity': newQuantity,
+          status: newStatus,
+          updated_by_id: user_id,
+          updated_by_type: role,
+          updated_at: new Date()
+        }
+      );
+    }
+
+    // Actualizar la venta
+    const updatedSale = await ProductSale.findByIdAndUpdate(
+      id,
+      { 
+        sale_status: 'Cancelada',
+        cancellation_reason: reason || 'Sin razón especificada',
+        cancelled_by_id: user_id,
+        cancelled_by_type: role,
+        cancelled_at: new Date(),
+        updated_by_id: user_id,
+        updated_by_type: role
+      },
+      { new: true }
+    ).populate('product_id').populate('client_id');
+
+    res.json({
+      message: "Venta cancelada exitosamente",
+      sale: updatedSale,
+      stock_restored: product ? {
+        product_name: product.name_product,
+        quantity_restored: sale.quantity_sold,
+        new_stock: product.stock.quantity + sale.quantity_sold
+      } : null
+    });
+
   } catch (err) {
-    console.error('Error obteniendo ventas:', err);
-    res.status(500).json({ message: 'Error interno del servidor', error: err.message });
+    console.error("Error cancelando venta:", err);
+    res.status(500).json({ 
+      message: "Error interno del servidor", 
+      error: err.message 
+    });
   }
 };

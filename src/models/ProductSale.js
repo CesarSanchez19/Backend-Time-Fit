@@ -5,7 +5,7 @@ const { Schema, model } = mongoose;
 const productSaleSchema = new Schema({
   product_id: { 
     type: Schema.Types.ObjectId, 
-    ref: 'Product', // Referencia al producto
+    ref: 'Product',
     required: true 
   },
   product_name: { 
@@ -29,7 +29,7 @@ const productSaleSchema = new Schema({
   },
   client_id: { 
     type: Schema.Types.ObjectId, 
-    ref: 'Client', // Referencia al cliente
+    ref: 'Client',
     required: true 
   },
   client_name: { 
@@ -43,7 +43,6 @@ const productSaleSchema = new Schema({
   },
   seller_id: { 
     type: Schema.Types.ObjectId, 
-    ref: 'Admin', // Referencia al vendedor
     required: true 
   },
   seller_name: { 
@@ -71,6 +70,26 @@ const productSaleSchema = new Schema({
     ref: 'Gym', 
     required: true 
   },
+  
+  // Campos adicionales para cancelaciones
+  cancellation_reason: {
+    type: String,
+    default: null
+  },
+  cancelled_by_id: {
+    type: Schema.Types.ObjectId,
+    default: null
+  },
+  cancelled_by_type: {
+    type: String,
+    enum: ['Administrador', 'Colaborador'],
+    default: null
+  },
+  cancelled_at: {
+    type: Date,
+    default: null
+  },
+  
   // Campos de auditoría
   registered_by_id: { 
     type: Schema.Types.ObjectId, 
@@ -92,5 +111,13 @@ const productSaleSchema = new Schema({
   timestamps: true, 
   collection: 'product_sales' 
 });
+
+// Índices para optimizar búsquedas
+productSaleSchema.index({ gym_id: 1 });
+productSaleSchema.index({ sale_code: 1 }, { unique: true });
+productSaleSchema.index({ sale_date: -1 });
+productSaleSchema.index({ client_id: 1, gym_id: 1 });
+productSaleSchema.index({ product_id: 1, gym_id: 1 });
+productSaleSchema.index({ sale_status: 1, gym_id: 1 });
 
 export default model('ProductSale', productSaleSchema);

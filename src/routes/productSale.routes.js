@@ -14,16 +14,19 @@ const router = Router();
 // Todas las rutas requieren autenticación
 router.use(verifyToken);
 
+// ✅ RUTAS PRINCIPALES
+
+// Ruta para obtener todas las ventas realizadas (admin y colaborador)
+// Esta debe ir ANTES de las rutas con parámetros para evitar conflictos
+router.get('/all', isColaboratorOrAdmin, getAllSales);
+
 // Ruta para vender productos (admin y colaborador)
 router.post('/sell', isColaboratorOrAdmin, sellProduct); 
 
 // Ruta para cancelar una venta (solo admin)
-router.post('/cancel', isAdmin, cancelSale);  // Se cambió de DELETE a POST, y el ID se pasa en el cuerpo
+router.post('/cancel', isAdmin, cancelSale);
 
-// Ruta para obtener detalles de una venta (admin y colaborador)
+// Ruta para obtener detalles de una venta específica (admin y colaborador)
 router.get('/:id', isColaboratorOrAdmin, getSaleById);
-
-// Ruta para obtener todas las ventas realizadas (admin y colaborador)
-router.get('/', isColaboratorOrAdmin, getAllSales); 
 
 export default router;
