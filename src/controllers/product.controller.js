@@ -1,5 +1,6 @@
 // controllers/product.controller.js
 import Product from "../models/Product.js";
+import ProductSale from '../models/ProductSale.js';
 import Admin from '../models/Admin.js';
 import Colaborator from '../models/Colaborator.js';
 import { resizeBase64Image } from '../libs/resizeImage.js';
@@ -316,7 +317,7 @@ export const updateProduct = async (req, res) => {
   }
 };
 
-// ✅ Eliminar producto (solo admin)
+// ✅ Eliminar producto (solo admin) - MEJORADO con validación de ventas
 export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.body;
@@ -339,6 +340,20 @@ export const deleteProduct = async (req, res) => {
       });
     }
 
+    // 🔥 NUEVA VALIDACIÓN: Verificar si el producto tiene ventas registradas
+    const existingSales = await ProductSale.findOne({ 
+      product_id: id,
+      gym_id: gym_id
+    });
+
+    if (existingSales) {
+      return res.status(400).json({ 
+        message: "No se puede eliminar el producto porque tiene ventas registradas en el historial. Para mantener la integridad de los datos, los productos con ventas no pueden ser eliminados.",
+        details: "Si deseas ocultar este producto, puedes cambiar su estado a 'inactivo' en lugar de eliminarlo."
+      });
+    }
+
+    // Si no hay ventas, proceder con la eliminación
     await Product.findByIdAndDelete(id);
 
     res.json({ 
