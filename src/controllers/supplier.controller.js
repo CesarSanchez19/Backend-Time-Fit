@@ -252,7 +252,7 @@ export const updateSupplier = async (req, res) => {
   }
 };
 
-// POST /suppliers/delete
+// POST /suppliers/delete - MEJORADO con validación de productos asociados
 export const deleteSupplier = async (req, res) => {
   try {
     const { id } = req.body;
@@ -268,13 +268,20 @@ export const deleteSupplier = async (req, res) => {
       return res.status(404).json({ message: "Proveedor no encontrado" });
     }
 
-    const hasProducts = await Product.findOne({ supplier_id: id });
+    // 🔥 VALIDACIÓN MEJORADA: Verificar si el proveedor tiene productos asociados en el mismo gimnasio
+    const hasProducts = await Product.findOne({ 
+      supplier_id: id, 
+      gym_id: gym_id 
+    });
+
     if (hasProducts) {
       return res.status(400).json({
-        message: "No se puede eliminar el proveedor porque tiene productos asociados",
+        message: "No se puede eliminar el proveedor porque tiene productos asociados en tu gimnasio. Para mantener la integridad de los datos, los proveedores con productos registrados no pueden ser eliminados.",
+        details: "Si deseas dejar de usar este proveedor, puedes cambiar el proveedor de los productos existentes antes de eliminarlo, o simplemente no asignar este proveedor a nuevos productos."
       });
     }
 
+    // Si no hay productos asociados, proceder con la eliminación
     await Supplier.findOneAndDelete({ _id: id, gym_id });
 
     res.json({
