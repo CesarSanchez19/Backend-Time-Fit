@@ -90,9 +90,5 @@ const productSchema = new Schema({
   collection: 'products' 
 });
 
-// Índices para optimizar búsquedas
-productSchema.index({ gym_id: 1 });
-productSchema.index({ barcode: 1, gym_id: 1 });
-productSchema.index({ name_product: 1, gym_id: 1 });
 
 export default model('Product', productSchema);

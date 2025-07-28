@@ -51,7 +51,4 @@ const supplierSchema = new mongoose.Schema({
   collection: 'suppliers' 
 });
 
-// Índice para optimizar búsquedas
-supplierSchema.index({ gym_id: 1 });
-
 export default mongoose.model('Supplier', supplierSchema);

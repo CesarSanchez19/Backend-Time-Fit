@@ -112,12 +112,4 @@ const productSaleSchema = new Schema({
   collection: 'product_sales' 
 });
 
-// Índices para optimizar búsquedas
-productSaleSchema.index({ gym_id: 1 });
-productSaleSchema.index({ sale_code: 1 }, { unique: true });
-productSaleSchema.index({ sale_date: -1 });
-productSaleSchema.index({ client_id: 1, gym_id: 1 });
-productSaleSchema.index({ product_id: 1, gym_id: 1 });
-productSaleSchema.index({ sale_status: 1, gym_id: 1 });
-
 export default model('ProductSale', productSaleSchema);
