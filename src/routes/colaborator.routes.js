@@ -10,19 +10,24 @@ import {
 } from "../controllers/colaborator.controller.js";
 
 import { verifyToken } from "../middlewares/auth.middleware.js";
-import { isAdmin, isColaboratorOrAdmin } from "../middlewares/rol.middleware.js";
+import { isAdmin } from "../middlewares/rol.middleware.js";
 
 const router = Router();
 
-// Públicas
-router.post("/register", verifyToken, isAdmin, registerColaborator); // Solo admin
+// Rutas públicas
 router.post("/login", loginColaborator);
 
-// Privadas
-router.get("/me", verifyToken, getMyColaboratorProfile); // Solo colaborador autenticado
-router.get("/all", verifyToken, isAdmin, getAllColaborators); // Solo admin
-router.post("/updated", verifyToken, isAdmin, updateColaborator); // Solo admin
-router.post("/delete", verifyToken, isAdmin, deleteColaborator); // Solo admin
-router.get("/:id", verifyToken, isAdmin, getColaboratorById); // Solo admin puede obtener colaborador por ID
+// Rutas protegidas
+router.use(verifyToken); // Aplicar verificación de token a todas las rutas siguientes
+
+// Ruta para obtener el perfil del colaborador autenticado
+router.get("/me", getMyColaboratorProfile); // ✅ Solo necesita estar autenticado
+
+// Rutas solo para administradores
+router.post("/register", isAdmin, registerColaborator); // Solo admin puede crear colaboradores
+router.get("/all", isAdmin, getAllColaborators);
+router.post("/updated", isAdmin, updateColaborator);
+router.post("/delete", isAdmin, deleteColaborator);
+router.get("/:id", isAdmin, getColaboratorById);
 
 export default router;
