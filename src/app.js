@@ -12,6 +12,7 @@ import productRoutes from './routes/product.routes.js';
 import supplierRoutes from './routes/supplier.routes.js';
 import productsSalesRoutes from './routes/productSale.routes.js';
 import calendarRoutes from './routes/calendar.routes.js';
+import noteRoutes from './routes/note.routes.js'; 
 
 import privateRoutes from './routes/private.routes.js';
 
@@ -32,6 +33,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/products_sales', productsSalesRoutes);
 app.use('/api/calendar', calendarRoutes);
+app.use('/api/notes', noteRoutes); 
 
 
 export default app;
