@@ -150,6 +150,7 @@ export const deleteAdmin = async (req, res) => {
 };
 
 // Obtener perfil del administrador actual (desde el token)
+// Obtener perfil del administrador actual (desde el token) - CORREGIDO
 export const getMyProfile = async (req, res) => {
   try {
     const admin = await Admin.findById(req.user.id).populate("rol_id", "role_name").populate("gym_id", "name");
@@ -164,6 +165,7 @@ export const getMyProfile = async (req, res) => {
       name: admin.name,
       last_name: admin.last_name,
       email: admin.email,
+      admin_code: admin.admin_code,
       role: admin.rol_id,
       gym: admin.gym_id,
       createdAt: admin.createdAt,
