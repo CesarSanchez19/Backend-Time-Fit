@@ -317,7 +317,7 @@ export const updateProduct = async (req, res) => {
   }
 };
 
-// ✅ Eliminar producto (solo admin) - MEJORADO con validación de ventas
+// ✅ Eliminar producto (solo admin) - MEJORADO con validación de ventas por estado
 export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.body;
@@ -340,25 +340,53 @@ export const deleteProduct = async (req, res) => {
       });
     }
 
-    // 🔥 NUEVA VALIDACIÓN: Verificar si el producto tiene ventas registradas
-    const existingSales = await ProductSale.findOne({ 
+    // 🔥 NUEVA VALIDACIÓN: Verificar el estado de todas las ventas del producto
+    const productSales = await ProductSale.find({ 
       product_id: id,
       gym_id: gym_id
     });
 
-    if (existingSales) {
-      return res.status(400).json({ 
-        message: "No se puede eliminar el producto porque tiene ventas registradas en el historial. Para mantener la integridad de los datos, los productos con ventas no pueden ser eliminados.",
-        details: "Si deseas ocultar este producto, puedes cambiar su estado a 'inactivo' en lugar de eliminarlo."
-      });
+    // Si el producto tiene ventas registradas
+    if (productSales.length > 0) {
+      // Verificar si todas las ventas están canceladas
+      const activeSales = productSales.filter(sale => sale.sale_status !== 'Cancelada');
+      
+      if (activeSales.length > 0) {
+        // Obtener información detallada de las ventas activas
+        const salesInfo = activeSales.map(sale => ({
+          codigo: sale.sale_code,
+          estado: sale.sale_status,
+          fecha: sale.sale_date.toLocaleDateString('es-MX'),
+          cliente: sale.client_name,
+          total: `$${sale.total_sale}`
+        }));
+
+        return res.status(400).json({ 
+          message: "No se puede eliminar el producto porque tiene ventas activas (no canceladas) en el historial.",
+          details: "Para eliminar este producto, todas sus ventas deben estar en estado 'Cancelada'. También puedes cambiar el estado del producto a 'inactivo' en lugar de eliminarlo.",
+          ventasActivas: salesInfo,
+          totalVentasActivas: activeSales.length,
+          totalVentas: productSales.length
+        });
+      }
+      
+      // Si llegamos aquí, todas las ventas están canceladas
+      console.log(`✅ Producto ${existingProduct.name_product} puede ser eliminado - Todas las ventas (${productSales.length}) están canceladas`);
     }
 
-    // Si no hay ventas, proceder con la eliminación
+    // Si no hay ventas o todas están canceladas, proceder con la eliminación
     await Product.findByIdAndDelete(id);
 
     res.json({ 
-      message: "Producto eliminado exitosamente",
-      deletedProduct: existingProduct
+      message: productSales.length > 0 
+        ? `Producto eliminado exitosamente. Todas las ventas asociadas (${productSales.length}) estaban canceladas.`
+        : "Producto eliminado exitosamente.",
+      deletedProduct: {
+        id: existingProduct._id,
+        name: existingProduct.name_product,
+        category: existingProduct.category,
+        totalVentasCanceladas: productSales.length
+      }
     });
   } catch (err) {
     console.error("Error eliminando producto:", err);
