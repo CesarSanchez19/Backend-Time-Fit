@@ -3,7 +3,9 @@ import {
   sellProduct,
   cancelSale,
   getSaleById,
-  getAllSales 
+  getAllSales,
+  deleteSale,
+  deleteMultipleCancelledSales
 } from '../controllers/productSale.controller.js';
 
 import { verifyToken } from '../middlewares/auth.middleware.js';
@@ -26,7 +28,14 @@ router.post('/sell', isColaboratorOrAdmin, sellProduct);
 // Ruta para cancelar una venta (solo admin)
 router.post('/cancel', isAdmin, cancelSale);
 
+// Ruta para eliminar una sola venta del historial (solo admin - solo ventas canceladas)
+router.post('/delete', isAdmin, deleteSale);
+
+// Ruta para eliminar múltiples ventas canceladas del historial (solo admin)
+router.post('/delete-multiple', isAdmin, deleteMultipleCancelledSales);
+
 // Ruta para obtener detalles de una venta específica (admin y colaborador)
+// Esta debe ir AL FINAL para evitar conflictos con rutas específicas
 router.get('/:id', isColaboratorOrAdmin, getSaleById);
 
 export default router;
