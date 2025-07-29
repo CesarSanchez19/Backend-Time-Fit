@@ -1,6 +1,7 @@
 import { createAccessToken } from "../libs/jwt.js";
 import Admin from "../models/Admin.js";
 import Role from "../models/Role.js";
+import Colaborator from "../models/Colaborator.js";
 import bcrypt from "bcrypt";
 
 // Función auxiliar
@@ -110,16 +111,101 @@ export const getAllAdmins = async (req, res) => {
   }
 };
 
-// ACTUALIZAR ADMIN
+// ACTUALIZAR ADMIN - VERSIÓN MEJORADA (mantiene estructura original)
 export const updateAdmin = async (req, res) => {
   try {
     const { id, ...updates } = req.body;
     if (!id) return res.status(400).json({ message: "ID del administrador requerido" });
 
+    // Obtener el admin actual para conocer su gym_id
+    const currentAdmin = await Admin.findById(id);
+    if (!currentAdmin) return res.status(404).json({ message: "Administrador no encontrado" });
+
+    // Validar unicidad de email dentro del gimnasio (si se está actualizando)
+    if (updates.email && updates.email !== currentAdmin.email) {
+      // Buscar admin con mismo email en el mismo gimnasio
+      const existingAdmin = await Admin.findOne({ 
+        email: updates.email,
+        gym_id: currentAdmin.gym_id,
+        _id: { $ne: id }  // Excluir el admin actual
+      });
+
+      if (existingAdmin) {
+        return res.status(400).json({ message: "El correo ya está en uso por otro administrador en este gimnasio" });
+      }
+
+      // Buscar colaborador con mismo email en el mismo gimnasio
+      const existingColaborator = await Colaborator.findOne({ 
+        email: updates.email,
+        gym_id: currentAdmin.gym_id
+      });
+
+      if (existingColaborator) {
+        return res.status(400).json({ message: "El correo ya está en uso por un colaborador en este gimnasio" });
+      }
+    }
+
+    // Validar unicidad de username dentro del gimnasio (si se está actualizando)
+    if (updates.username && updates.username !== currentAdmin.username) {
+      // Buscar admin con mismo username en el mismo gimnasio
+      const existingAdmin = await Admin.findOne({ 
+        username: updates.username,
+        gym_id: currentAdmin.gym_id,
+        _id: { $ne: id }  // Excluir el admin actual
+      });
+
+      if (existingAdmin) {
+        return res.status(400).json({ message: "El nombre de usuario ya está en uso por otro administrador en este gimnasio" });
+      }
+
+      // Buscar colaborador con mismo username en el mismo gimnasio
+      const existingColaborator = await Colaborator.findOne({ 
+        username: updates.username,
+        gym_id: currentAdmin.gym_id
+      });
+
+      if (existingColaborator) {
+        return res.status(400).json({ message: "El nombre de usuario ya está en uso por un colaborador en este gimnasio" });
+      }
+    }
+
+    // Validar unicidad de name + last_name dentro del gimnasio (si se están actualizando)
+    if ((updates.name && updates.name !== currentAdmin.name) || 
+        (updates.last_name && updates.last_name !== currentAdmin.last_name)) {
+      
+      const nameToCheck = updates.name || currentAdmin.name;
+      const lastNameToCheck = updates.last_name || currentAdmin.last_name;
+
+      // Buscar admin con mismo nombre completo en el mismo gimnasio
+      const existingAdmin = await Admin.findOne({ 
+        name: nameToCheck,
+        last_name: lastNameToCheck,
+        gym_id: currentAdmin.gym_id,
+        _id: { $ne: id }  // Excluir el admin actual
+      });
+
+      if (existingAdmin) {
+        return res.status(400).json({ message: "Ya existe un administrador con el mismo nombre completo en este gimnasio" });
+      }
+
+      // Buscar colaborador con mismo nombre completo en el mismo gimnasio
+      const existingColaborator = await Colaborator.findOne({ 
+        name: nameToCheck,
+        last_name: lastNameToCheck,
+        gym_id: currentAdmin.gym_id
+      });
+
+      if (existingColaborator) {
+        return res.status(400).json({ message: "Ya existe un colaborador con el mismo nombre completo en este gimnasio" });
+      }
+    }
+
+    // Mantener la lógica original de encriptación de contraseña
     if (updates.password) {
       updates.password = await bcrypt.hash(updates.password, 10);
     }
 
+    // Mantener la lógica original de actualización
     const updated = await Admin.findByIdAndUpdate(id, updates, {
       new: true,
       runValidators: true,
@@ -149,7 +235,6 @@ export const deleteAdmin = async (req, res) => {
   }
 };
 
-// Obtener perfil del administrador actual (desde el token)
 // Obtener perfil del administrador actual (desde el token) - CORREGIDO
 export const getMyProfile = async (req, res) => {
   try {
